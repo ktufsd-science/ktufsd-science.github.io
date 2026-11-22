@@ -1,0 +1,238 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>KTUFSD Science for Students</title>
+<meta name="description" content="Science test practice and investigations for KTUFSD students.">
+<link rel="icon" href="kt-logo-white.png">
+<link rel="preload" href="fonts/lato-900.woff2" as="font" type="font/woff2" crossorigin>
+<script>document.documentElement.className='js'</script>
+<style>
+/* REGISTERED COLORS: telling the browser these two variables are colors lets it fade smoothly from one course's
+   color to the next, even inside gradients. That is what keeps the color shift seamless. */
+@property --mood{syntax:"<color>";inherits:true;initial-value:#0c1350}
+@property --glow{syntax:"<color>";inherits:true;initial-value:#3b49b2}
+:root{--mood:#0c1350;--glow:#3b49b2;--ink:#f4f1ea;--dim:rgba(244,241,234,.74);--rule:rgba(255,255,255,.22);--signal:#ffd166;
+--head:"Lato",system-ui,sans-serif;--body:"Lato",system-ui,sans-serif;transition:--mood .9s ease,--glow .9s ease}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:150px}
+body{margin:0;color:var(--ink);font:17px/1.5 var(--body);background:var(--mood);overflow-x:hidden}
+a{color:inherit}:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:8px;background:#000;padding:8px 12px;z-index:30}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* SKY LAYERS, back to front: the aurora (first screen only, fades out as you scroll), one glow centered on the screen
+   (takes each course's color), then the stars. Words and menus sit in front of all of them. */
+.sky{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+/* AURORA: one continuous blend, not separate blobs. A sweeping base gradient fills every gap, and large soft color
+   clouds overlap on top of it. It drifts very slowly (transform only, cheap for a Chromebook). */
+.aurora{position:absolute;inset:-15%;background:
+ radial-gradient(ellipse 70% 38% at 22% 62%,rgba(63,192,200,.55),transparent 70%),
+ radial-gradient(ellipse 52% 58% at 66% 34%,rgba(193,63,196,.5),transparent 70%),
+ radial-gradient(ellipse 62% 44% at 46% 78%,rgba(66,29,145,.75),transparent 72%),
+ radial-gradient(ellipse 46% 50% at 90% 66%,rgba(165,121,215,.42),transparent 70%),
+ radial-gradient(ellipse 80% 55% at 48% 18%,rgba(59,73,178,.6),transparent 72%),
+ linear-gradient(115deg,#0c1350 0%,#1b2380 28%,#33187a 52%,#123d6e 78%,#0c1350 100%);
+ animation:drift 40s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(4%,-3%,0) rotate(3deg) scale(1.06)}}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 46% 40% at 50% 58%,var(--glow),transparent);opacity:.55}
+/* STARS (picked 2026-11-21 from prototypes/hero-round-4/star-options.html: options B, C and D together).
+   C, DEPTH: three layers. Far stars are tiny and dim and scroll slowly; near stars are larger and brighter and scroll
+   almost as fast as the words. Moving at different speeds is what makes the sky feel deep (parallax).
+   B, SPARKLE GLINTS: a few four-pointed sparkles that now and then flash open, turn a little, and close again.
+   D, SHOOTING STAR: a rare streak across the sky, about every 26 seconds, starting somewhere new each time. */
+.stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.sl{position:absolute;left:0;top:0;width:100%}
+.sl i{position:absolute;border-radius:50%;background:#fff}
+.far i{width:1.5px;height:1.5px;opacity:.45}
+.mid i{width:2.5px;height:2.5px;opacity:.7}
+.near i{width:3.5px;height:3.5px;opacity:.95;box-shadow:0 0 6px rgba(255,255,255,.6)}
+.sl svg{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;opacity:0;animation:glint var(--d) ease-in-out var(--w) infinite}
+@keyframes glint{0%,72%,100%{opacity:0;transform:scale(.1) rotate(0deg)}80%{opacity:1;transform:scale(1) rotate(45deg)}88%{opacity:0;transform:scale(.2) rotate(90deg)}}
+.streak{position:absolute;left:var(--sx,62%);top:var(--sy,18%);width:150px;height:2px;border-radius:2px;background:linear-gradient(to left,#fff,rgba(255,255,255,0));opacity:0;transform-origin:right center;transform:rotate(-22deg);animation:shoot 26s ease-in 4s infinite}
+@keyframes shoot{0%{opacity:0;transform:rotate(-22deg) translateX(0)}.6%{opacity:1}4%{opacity:0;transform:rotate(-22deg) translateX(-380px)}100%{opacity:0;transform:rotate(-22deg) translateX(-380px)}}
+main,.jump{position:relative;z-index:1}
+
+
+/* HEADER: frosted glass tinted with the current course color. At the very top it is nearly clear, so the aurora runs
+   right up to the top edge; as the aurora fades the tint fills in, so the header always matches the page below it. */
+.top{position:sticky;top:0;z-index:20;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.top::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--mood);opacity:var(--tint,.12)}
+.hdr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"logo name search" "logo strip strip";column-gap:18px;row-gap:6px;align-items:center;padding:12px clamp(16px,4vw,48px)}
+.logo{grid-area:logo;display:block;width:76px;height:76px}.logo img{display:block;width:100%;height:100%}
+.name{grid-area:name;text-decoration:none;color:#fff;align-self:end}
+.name b{display:block;font:900 24px/1.1 var(--head)}
+.name small{display:block;font:700 12px/1.4 var(--body);letter-spacing:.18em;text-transform:uppercase;opacity:.9}
+/* Course buttons: no outline, just a soft fill. The one you are looking at turns yellow. */
+.strip{grid-area:strip;display:flex;gap:8px;padding:4px 2px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
+.strip::-webkit-scrollbar{display:none}
+.strip a{flex:none;padding:7px 14px;font:700 14px var(--body);text-decoration:none;background:rgba(255,255,255,.1);white-space:nowrap;transition:background-color .3s,color .3s}
+.strip a:focus-visible{outline-offset:-3px}.strip a:hover{background:rgba(255,255,255,.2)}
+.strip a[aria-current="location"]{background:var(--signal);color:#111}
+
+/* SEARCH: a soft frosted pill with a magnifying glass (style B, picked 2026-11-21). The pill shape is the one rounded
+   thing on the page, on purpose, so it reads as the place to type. */
+.search{grid-area:search;position:relative;z-index:2;width:300px;max-width:100%;justify-self:end}
+.search .mag{position:absolute;left:13px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--dim);pointer-events:none}
+.search input{width:100%;height:40px;padding:0 14px 0 38px;font:inherit;font-size:15px;color:var(--ink);border:0;background:rgba(255,255,255,.13);border-radius:999px;-webkit-appearance:none;appearance:none}
+.search input::placeholder{color:var(--dim)}
+.search input:focus-visible{outline:2px solid var(--signal);outline-offset:2px;background:rgba(255,255,255,.18)}
+.results{position:absolute;right:0;top:calc(100% + 6px);width:min(360px,90vw);margin:0;padding:4px 0;list-style:none;background:#0b0f16;border:1px solid rgba(255,255,255,.25);max-height:60vh;overflow:auto}
+.results[hidden]{display:none}
+.results a{display:block;padding:10px 14px;text-decoration:none}
+.results a:hover,.results a:focus-visible{background:var(--signal);color:#111;outline-offset:-3px}
+.results .m{display:block;font-size:13px;color:var(--dim)}
+.results a:hover .m,.results a:focus-visible .m{color:rgba(0,0,0,.72)}
+.results .none{padding:10px 14px;color:var(--dim)}
+@media (max-width:760px){
+ .hdr{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo name" "search search" "strip strip";row-gap:8px}
+ .logo{width:48px;height:48px}.name{align-self:center}.name b{font-size:19px}.name small{font-size:10.5px}
+ .search{width:100%;justify-self:stretch}
+ .results{left:0;width:auto}
+}
+
+/* SCENES: course name on the left, its resources on the right. */
+.scene{min-height:80vh;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(24px,5vw,80px);align-items:center;padding:8vh clamp(16px,6vw,96px)}
+.scene.intro{min-height:calc(100vh - 110px);grid-template-columns:minmax(0,1fr);align-content:center}
+.kicker{font:700 13px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--signal);margin:0 0 14px}
+h1,h2{font-family:var(--head);font-weight:900;line-height:1.04;margin:0 0 18px;letter-spacing:-.01em}
+/* The title runs across the full width of the screen. */
+h1{font-size:clamp(40px,6vw,92px);max-width:none}
+h2{font-size:clamp(28px,3.4vw,46px)}
+.lede{max-width:42ch;color:var(--dim);font-size:clamp(17px,1.6vw,22px);margin:0 0 24px}
+.go{display:inline-block;margin-top:6px;padding:12px 20px;background:var(--ink);color:#111;font-weight:700;text-decoration:none}.go:hover{background:var(--signal)}
+.lockup{display:flex;align-items:center;gap:16px;margin:0 0 22px}
+.lockup img{width:64px;height:64px}
+.lockup b{display:block;font:900 30px/1.05 var(--head)}
+.lockup small{display:block;font:700 12px/1.3 var(--body);letter-spacing:.22em;text-transform:uppercase}
+/* Resource groups: label first, then titles, then (dim, right) the format. */
+.res{max-width:40rem}.group+.group{margin-top:26px}
+.group h3{margin:0 0 4px;font:700 12.5px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--signal)}
+.group ul{list-style:none;margin:0;padding:0}
+.group li{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;padding:9px 0;border-top:1px solid var(--rule)}
+.group li .t{text-decoration:none;font-weight:700}.group li .t:hover{text-decoration:underline}
+.group li .f{font-size:14px;color:var(--dim);white-space:nowrap}
+.group li .key{grid-column:1;font-size:14px;color:var(--dim)}.group li .key:hover{color:var(--ink)}
+.rise{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+.scene.on .rise{opacity:1;transform:none}
+.scene.on .rise:nth-child(2){transition-delay:.08s}.scene.on .rise:nth-child(3){transition-delay:.16s}.scene.on .rise:nth-child(4){transition-delay:.24s}
+
+.jump{padding:8vh clamp(16px,6vw,96px) 10vh;background:rgba(0,0,0,.3)}
+.jump>h2{font-size:clamp(28px,3.4vw,46px)}
+.jump ul.all{list-style:none;margin:0;padding:0;columns:3 240px;column-gap:32px}
+.jump ul.all li{break-inside:avoid;border-top:1px solid rgba(255,255,255,.24)}
+.jump ul.all a{display:block;padding:12px 0;text-decoration:none}.jump ul.all a:hover{text-decoration:underline}
+.jump a.zero{color:var(--dim)}.jump a.zero span{font-size:14px;margin-left:8px}
+/* RECENTLY ADDED: centered along the bottom, with a larger yellow heading and a yellow bar over each item so it stands out. */
+.recent{margin:80px auto 0;max-width:72rem;text-align:center}
+.recent h2{font-size:clamp(24px,2.6vw,34px);color:var(--signal);margin-bottom:24px}
+.recent ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px;text-align:left}
+.recent li{padding-top:14px;border-top:3px solid var(--signal)}
+.recent .t{font-weight:700;font-size:19px;line-height:1.3;text-decoration:none}.recent .t:hover{text-decoration:underline}
+.recent .f{display:block;margin-top:4px;font-size:14px;color:var(--dim)}
+
+@media (max-width:760px){
+ html{scroll-padding-top:170px}
+ .hdr{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo name" "search search" "strip strip";row-gap:8px}
+ .logo{width:48px;height:48px}.name{align-self:center}.name b{font-size:19px}.name small{font-size:10.5px}
+ .search{width:100%;justify-self:stretch}
+ .results{left:0;width:auto}
+ .scene{grid-template-columns:minmax(0,1fr);min-height:0;padding-top:10vh;padding-bottom:10vh}
+ .scene.intro{min-height:calc(100vh - 170px)}
+}
+@media (prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}:root,.strip a{transition:none}
+ .aurora,.sl svg,.streak{animation:none}
+ .rise{opacity:1;transform:none;transition:none}
+}
+/* LATO, hosted here. */
+@font-face{font-family:"Lato";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/lato-400.woff2) format("woff2")}
+@font-face{font-family:"Lato";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/lato-700.woff2) format("woff2")}
+@font-face{font-family:"Lato";font-style:normal;font-weight:900;font-display:swap;src:url(fonts/lato-900.woff2) format("woff2")}
+/* Words and buttons only start hidden (to rise in) once the script is running, so a failed script never hides a link. */
+html:not(.js) .rise{opacity:1;transform:none}
+/* BRIGHTER TEXT than the hub: students read these lines, and the gold and green glows sit behind them. */
+.scene .lede{color:rgba(244,241,234,.94);text-shadow:0 1px 12px rgba(0,0,0,.35)}
+/* FIRST SCREEN: one big button per site, each with a small line saying who it is for. */
+.picks{display:flex;flex-wrap:wrap;gap:14px;margin:4px 0 0}
+.pick{display:flex;flex-direction:column;gap:2px;min-width:240px;padding:16px 24px;background:var(--ink);color:#111;text-decoration:none;font-weight:900;font-size:20px;line-height:1.2}
+.pick small{font-weight:700;font-size:14px;color:#3a3a3a;letter-spacing:.02em}
+.pick:hover{background:var(--signal)}
+@media (max-width:520px){.pick{width:100%;min-width:0}}
+.teacher{margin:20px 0 0;font-size:16px;color:rgba(244,241,234,.9)}
+.foot{position:relative;z-index:1;padding:6vh clamp(16px,6vw,96px);background:rgba(0,0,0,.35);font-size:15px;color:rgba(244,241,234,.9)}
+.foot p{max-width:62ch;margin:0}
+/* SCREENSHOT: a plain frame, slightly lifted off the sky, so it reads as "this is the screen you will get". */
+.shot{margin:0;max-width:44rem}
+.shot a{display:block;border:1px solid rgba(255,255,255,.28);box-shadow:0 24px 60px rgba(0,0,0,.45);transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+.shot a:hover{transform:translateY(-4px);box-shadow:0 30px 70px rgba(0,0,0,.55)}
+.shot img{display:block;width:100%;height:auto}
+.shot figcaption{margin-top:10px;font-size:15px;color:rgba(244,241,234,.92);max-width:56ch}
+/* FACTS: short lines under the description, each with a yellow tick mark. */
+.facts{list-style:none;margin:0 0 26px;padding:0;max-width:40ch}
+.facts li{position:relative;padding:8px 0 8px 22px;border-top:1px solid var(--rule);font-size:17px;color:var(--ink);text-shadow:0 1px 10px rgba(0,0,0,.35)}
+.facts li::before{content:"";position:absolute;left:2px;top:17px;width:9px;height:5px;border:solid var(--signal);border-width:0 0 2px 2px;transform:rotate(-45deg)}
+.go.big{font-size:18px;padding:14px 24px}
+@media (prefers-reduced-motion:reduce){.shot a,.shot a:hover{transition:none;transform:none}}</style></head><body>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="sky" aria-hidden="true"><div class="aurora"></div></div><div class="glow" aria-hidden="true"></div><div class="stars" aria-hidden="true"><div class="sl far"></div><div class="sl mid"></div><div class="sl near"></div><i class="streak"></i></div>
+<div class="top"><div class="hdr">
+<a class="logo" href="#top"><img src="kt-logo-white.png" alt="KTUFSD Science for Students, top of page" width="76" height="76"></a>
+<a class="name" href="#top" tabindex="-1"><b>KTUFSD Science</b><small>For Students</small></a>
+<nav class="strip" aria-label="Jump to a section"><a href="#test-practice" data-for="test-practice">Test Practice</a><a href="#for-the-birds" data-for="for-the-birds">For the Birds</a></nav></div></div>
+<main id="main">
+<section class="scene intro on" data-mood="#0c1350" data-glow="#3b49b2" id="top">
+<div class="copy"><div class="lockup rise"><img src="kt-logo-white.png" alt="" width="64" height="64"><span><b>Science</b><small>For Students</small></span></div>
+<h1 class="rise">KTUFSD Science for Students</h1>
+<p class="lede rise">Practice for the state science test and work through science investigations. No sign-in needed.</p>
+<div class="picks rise"><a class="pick" href="https://ktufsd-science.github.io/practice/">Practice the science test<small>Grades 3 to 8</small></a><a class="pick" href="https://ktufsd-science.github.io/practice/for-the-birds/">Open For the Birds<small>Biology investigation</small></a></div><p class="teacher rise">Your teacher will tell you which one to use.</p></div></section>
+<section class="scene" data-mood="#4d3b0e" data-glow="#d9a63a" id="test-practice">
+<div class="copy"><p class="kicker rise">Practice for grades 3 to 8</p><h2 class="rise">NYS Science Test Practice</h2><p class="lede rise">Practice science test questions on a screen like the computer-based state test. Most questions come from past state tests.</p>
+<ul class="facts rise"><li>Pick your grade, then pick a set of questions</li><li>Use test tools like the highlighter, calculator, ruler, and line reader</li><li>When you finish, see your score and how written answers are scored</li></ul>
+<a class="go big rise" href="https://ktufsd-science.github.io/practice/">Start practicing</a></div>
+<figure class="shot rise"><a href="https://ktufsd-science.github.io/practice/" tabindex="-1" aria-hidden="true"><img src="shots/test-practice.jpg" alt="A practice test question about the Albany Pine Bush ecosystem, with the passage on the left, the question on the right, and test tools along the bottom" width="1366" height="768" loading="lazy"></a>
+<figcaption>A practice question: the reading is on the left, the question is on the right, and the tools are along the bottom.</figcaption></figure></section>
+<section class="scene" data-mood="#12402f" data-glow="#3f8a52" id="for-the-birds">
+<div class="copy"><p class="kicker rise">Biology · Required investigation</p><h2 class="rise">For the Birds</h2><p class="lede rise">Why do birds fly into windows? Study the problem, then design and test a way to keep birds safe.</p>
+<ul class="facts rise"><li>This takes more than one class</li><li>At the end of class, click Save to a file</li><li>Next class, click Open a file and choose the file you saved</li><li>Read aloud and text size buttons are at the top</li></ul>
+<a class="go big rise" href="https://ktufsd-science.github.io/practice/for-the-birds/">Open the investigation</a></div>
+<figure class="shot rise"><a href="https://ktufsd-science.github.io/practice/for-the-birds/" tabindex="-1" aria-hidden="true"><img src="shots/for-the-birds.jpg" alt="The For the Birds investigation, opening on a photo of tree branches and the question Where could a chickadee fly?" width="1366" height="768" loading="lazy"></a>
+<figcaption>The first page asks where a chickadee could fly. Save to a file and Open a file are in the bar at the top.</figcaption></figure></section>
+</main>
+<footer class="foot"><p>These sites have no sign-in and do not send your answers anywhere. Your work stays in your Chromebook's browser and in any file you save.</p></footer>
+<script>(function(){// COURSE COLOR AND ACTIVE BUTTON: the last scene touching the middle band of the screen wins. The registered
+// --mood and --glow colors fade on their own, so the page, glow and header all shift together.
+var root=document.documentElement,scenes=[].slice.call(document.querySelectorAll('[data-mood]')),chips=[].slice.call(document.querySelectorAll('.strip a')),strip=document.querySelector('.strip'),inBand={};
+var io=new IntersectionObserver(function(en){en.forEach(function(e){inBand[e.target.id]=e.isIntersecting});var cur=null;
+ scenes.forEach(function(s){if(inBand[s.id])cur=s});if(!cur)return;
+ root.style.setProperty('--mood',cur.dataset.mood);root.style.setProperty('--glow',cur.dataset.glow);
+ chips.forEach(function(c){if(c.dataset['for']===cur.id){c.setAttribute('aria-current','location');
+  if(c.offsetLeft<strip.scrollLeft||c.offsetLeft+c.offsetWidth>strip.scrollLeft+strip.clientWidth)strip.scrollLeft=c.offsetLeft-24}else c.removeAttribute('aria-current')})},{rootMargin:'-45% 0px -45% 0px'});
+scenes.forEach(function(s){io.observe(s)});
+var io2=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting)e.target.classList.add('on')})},{threshold:.15});
+scenes.forEach(function(s){io2.observe(s)});
+// AURORA FADE: fully visible at the top, gone by the end of the first screen. The header's tint fills in at the same
+// rate, so there is never a line between the header and the page. One read and two writes per frame.
+var sky=document.querySelector('.sky'),top=document.querySelector('.top'),intro=document.getElementById('top'),span=1,ticking=false;
+function measure(){span=Math.max(1,intro.offsetHeight*.85)}
+var calm=matchMedia('(prefers-reduced-motion: reduce)');
+function fade(){ticking=false;var y=scrollY,f=Math.min(1,Math.max(0,y/span));sky.style.opacity=(1-f).toFixed(3);top.style.setProperty('--tint',(.12+.8*f).toFixed(3));
+ // DEPTH: each star layer slides up by its own share of the scroll (far 20%, middle 50%, near 90%).
+ LAYERS.forEach(function(l){l.el.style.transform=calm.matches?'':'translate3d(0,'+(-y*l.speed).toFixed(1)+'px,0)'})}
+addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(fade)}},{passive:true});
+// STARS: a fixed pattern (same every visit). Each layer is as tall as the share of the page it will scroll past,
+// so there are always stars on screen, and new ones come into view as you scroll.
+var seed=7;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280}
+var LAYERS=[{el:document.querySelector('.sl.far'),speed:.2,per:16000,cap:220},{el:document.querySelector('.sl.mid'),speed:.5,per:30000,cap:170,glints:true},{el:document.querySelector('.sl.near'),speed:.9,per:75000,cap:110}];
+var SPARK='<path d="M0 -10 L1.6 -1.6 L10 0 L1.6 1.6 L0 10 L-1.6 1.6 L-10 0 L-1.6 -1.6 Z" fill="#fff"/>';
+function makeStars(){seed=7;var w=root.clientWidth,vh=Math.max(1,innerHeight),max=Math.max(0,root.scrollHeight-vh);
+ LAYERS.forEach(function(l){var h=Math.round(vh+max*l.speed),n=Math.min(l.cap,Math.round(w*h/l.per)),s='';
+  for(var i=0;i<n;i++)s+='<i style="left:'+(rnd()*100).toFixed(2)+'%;top:'+(rnd()*h).toFixed(0)+'px"></i>';
+  // SPARKLES live in the middle layer, about one per screenful, each on its own slow timer (never more than 30;
+  // the window height is floored at 1 above because a hidden tab can briefly report 0, which made the count infinite).
+  if(l.glints)for(var g=0,m=Math.min(30,Math.max(4,Math.round(h/vh*1.4)));g<m;g++)s+='<svg viewBox="-10 -10 20 20" style="left:'+(4+rnd()*92).toFixed(1)+'%;top:'+(rnd()*h).toFixed(0)+'px;--d:'+(6+rnd()*5).toFixed(1)+'s;--w:-'+(rnd()*10).toFixed(1)+'s">'+SPARK+'</svg>';
+  l.el.style.height=h+'px';l.el.innerHTML=s})}
+// SHOOTING STAR: after each pass, move its starting point so it never repeats the same path.
+var streak=document.querySelector('.streak');
+streak.addEventListener('animationiteration',function(){streak.style.setProperty('--sx',(40+Math.random()*50).toFixed(0)+'%');streak.style.setProperty('--sy',(6+Math.random()*40).toFixed(0)+'%')});
+if(calm.addEventListener)calm.addEventListener('change',fade);
+var rt=0;function layout(){measure();makeStars();fade()}
+addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(layout,200)});
+layout();addEventListener('load',layout)})();</script></body></html>
